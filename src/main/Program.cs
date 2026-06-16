@@ -12,11 +12,17 @@ public static class Program
     {
         var app = new Application();
         var window = new OverlayWindow();
-        using var hook = new KeyboardHook();
+        var view = new KeyboardView();
+        
+        window.Content = view;
 
-        hook.KeyPressed += (character) =>
+        using var hook = new KeyboardHook();
+        hook.KeyPressed += (key) => 
         {
-            window.Dispatcher.Invoke(() => window.SpawnLetter(character));
+            window.Dispatcher.Invoke(() => {
+                view.PressKey(key.ToString());
+                // TODO: Play sound from soundpack here
+            });
         };
 
         hook.Install();
