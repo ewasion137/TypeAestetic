@@ -6,14 +6,16 @@ namespace TypeAestetic.Hooks;
 
 public class KeyboardHook : IDisposable
 {
-    private const int WH_KEYBOARD_LL = 13;
     private const int WM_KEYDOWN = 0x0100;
+    private const int WM_KEYUP = 0x0101;
     private const int WM_SYSKEYDOWN = 0x0104;
+    private const int WM_SYSKEYUP = 0x0105;
 
     private readonly LowLevelKeyboardProc _proc;
     private IntPtr _hookId = IntPtr.Zero;
 
     public event Action<char>? KeyPressed;
+    public event Action<char>? KeyReleased;
 
     public KeyboardHook()
     {
@@ -34,13 +36,17 @@ public class KeyboardHook : IDisposable
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
+        if (nCode >= 0)
         {
             int vkCode = Marshal.ReadInt32(lParam);
             char character = MapVkCodeToChar(vkCode);
+
             if (character != '\0')
             {
-                KeyPressed?.Invoke(character);
+                if (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)
+                    KeyPressed?.Invoke(character);
+                else if (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP)
+                    KeyReleased?.Invoke(character);
             }
         }
         return CallNextHookEx(_hookId, nCode, wParam, lParam);
