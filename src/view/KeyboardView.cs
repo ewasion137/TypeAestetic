@@ -94,7 +94,7 @@ public class KeyboardView : Canvas
             "RightAlt" => "ALT",
             "Space" => "",
             "LWin" or "RWin" => "WIN",
-            // Фикс для D: Убираем D только если это цифра (D1, D2...), иначе оставляем
+            // Fix for D
             _ => (keyName.Length > 1 && keyName.StartsWith("D") && char.IsDigit(keyName[1]))
                  ? keyName.Substring(1)
                  : keyName.Replace("Oem", "")
