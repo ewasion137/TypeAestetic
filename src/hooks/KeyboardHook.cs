@@ -55,11 +55,15 @@ public class KeyboardHook : IDisposable
 
     private char MapVkCodeToChar(int vkCode)
     {
-        // Basic Mapping
-        if (vkCode >= 65 && vkCode <= 90) return (char)vkCode; // A-Z
-        if (vkCode >= 48 && vkCode <= 57) return (char)vkCode; // 0-9
-        if (vkCode == 32) return ' '; // Space
-        return '\0';
+        return vkCode switch
+        {
+            >= 65 and <= 90 => (char)vkCode,     // A-Z
+            >= 48 and <= 57 => (char)vkCode,     // 0-9
+            32 => ' ',                           // Space -> will be "SPACE" in Dictionary
+            160 or 161 => 'S',                   // Shift (L/R) -> map to 'S' or handle as "SHIFT"
+            162 or 163 => 'C',                   // Ctrl
+            _ => '\0'
+        };
     }
 
     public void Dispose()
