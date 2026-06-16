@@ -68,7 +68,7 @@ public class KeyboardView : Canvas
         
             // Add Glow effect
             border.Effect = new DropShadowEffect { 
-                olor = Colors.Cyan, BlurRadius = 15, ShadowDepth = 0, Opacity = 0.8 
+                color = Colors.Cyan, BlurRadius = 15, ShadowDepth = 0, Opacity = 0.8 
             };
         }
     }
