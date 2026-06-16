@@ -3,11 +3,13 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Collections.Generic;
+using System.Windows.Media.Effects;
 
 namespace TypeAestetic.View;
 
 public class KeyboardView : Canvas
 {
+    private readonly HashSet<string> _pressedKeys = new();
     private readonly Dictionary<string, Border> _keys = new();
 
     public KeyboardView()
@@ -54,12 +56,40 @@ public class KeyboardView : Canvas
 
     public void PressKey(string key)
     {
-        if (!_keys.TryGetValue(key.ToUpper(), out var border)) return;
+        key = key.ToUpper();
+        if (_pressedKeys.Contains(key)) return; // Filter Windows repeat-key lag
+        _pressedKeys.Add(key);
 
-        // Visual Feedback: Glow and Scale
-        var anim = new ColorAnimation(Colors.Cyan, TimeSpan.FromMilliseconds(50)) { AutoReverse = true };
-        border.Background.BeginAnimation(SolidColorBrush.ColorProperty, anim);
+        if (_keys.TryGetValue(key, out var border))
+        {
+            // Cancel previous animations and set "Active" state
+            border.Background.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            border.Background = new SolidColorBrush(Colors.Cyan);
         
-        // Sound could be triggered here too
+            // Add Glow effect
+            border.Effect = new DropShadowEffect { 
+                olor = Colors.Cyan, BlurRadius = 15, ShadowDepth = 0, Opacity = 0.8 
+            };
+        }
+    }
+
+    public void ReleaseKey(string key)
+    {
+        key = key.ToUpper();
+        _pressedKeys.Remove(key);
+
+        if (_keys.TryGetValue(key, out var border))
+        {
+            // Smooth return to default state
+            var fadeAnim = new ColorAnimation
+            {
+                To = Color.FromArgb(100, 30, 30, 30),
+                Duration = TimeSpan.FromMilliseconds(200)
+            };
+            border.Background.BeginAnimation(SolidColorBrush.ColorProperty, fadeAnim);
+        
+            // Remove glow
+            border.Effect = null;
+        }
     }
 }

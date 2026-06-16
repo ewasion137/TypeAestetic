@@ -18,11 +18,13 @@ public static class Program
 
         using var hook = new KeyboardHook();
         hook.KeyPressed += (key) => 
-        {
-            window.Dispatcher.Invoke(() => {
-                view.PressKey(key.ToString());
-                // TODO: Play sound from soundpack here
-            });
+        {  
+            window.Dispatcher.Invoke(() => view.PressKey(key.ToString()));
+        };
+
+        hook.KeyReleased += (key) => 
+        {     
+            window.Dispatcher.Invoke(() => view.ReleaseKey(key.ToString()));
         };
 
         hook.Install();
