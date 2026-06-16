@@ -14,11 +14,14 @@ public class OverlayWindow : Window
         Background = System.Windows.Media.Brushes.Transparent;
         Topmost = true;
         ShowInTaskbar = false;
-        SizeToContent = SizeToContent.WidthAndHeight;
 
-        // Position at bottom-right
-        Left = SystemParameters.PrimaryScreenWidth - 450; 
-        Top = SystemParameters.PrimaryScreenHeight - 250;
+        // Window size for a full keyboard (approx 800x320)
+        Width = 820;
+        Height = 320;
+
+        // Position: Bottom Right with 20px margin
+        Left = SystemParameters.PrimaryScreenWidth - Width - 20;
+        Top = SystemParameters.PrimaryScreenHeight - Height - 20;
     }
 
     protected override void OnSourceInitialized(EventArgs e)

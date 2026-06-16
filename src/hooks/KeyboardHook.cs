@@ -15,8 +15,8 @@ public class KeyboardHook : IDisposable
     private readonly LowLevelKeyboardProc _proc;
     private IntPtr _hookId = IntPtr.Zero;
 
-    public event Action<char>? KeyPressed;
-    public event Action<char>? KeyReleased;
+    public event Action<string>? KeyPressed;
+    public event Action<string>? KeyReleased;
 
     public KeyboardHook()
     {
