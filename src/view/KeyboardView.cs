@@ -21,7 +21,6 @@ public class KeyboardView : Canvas
 
     private void CreateLayout()
     {
-        // Описываем ряды клавиатуры
         string[][] rows = {
         new[] { "Escape", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" },
         new[] { "Oem3", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D0", "OemMinus", "OemPlus", "Back" },
@@ -35,74 +34,86 @@ public class KeyboardView : Canvas
         foreach (var row in rows)
         {
             double startX = 0;
+            // Small offset for F-keys row to align with numbers
+            if (row[0] == "Escape") startX = 0;
+
             foreach (var key in row)
             {
                 double width = GetKeyWidth(key);
                 AddKey(key, startX, startY, width);
-                startX += width + 5; // 5 - отступ между кнопками
+                startX += width + 4; // Gap between keys
             }
-            startY += 50; // Высота кнопки + отступ
+            startY += 44; // Vertical gap
         }
-
-        // Подгоняем размер холста под результат
-        Width = 800;
-        Height = 350;
     }
 
-
+    // [WHERE: GetKeyWidth method - compact version]
     private double GetKeyWidth(string key)
     {
         return key switch
         {
-            "Space" => 250,
-            "LeftShift" or "RightShift" => 100,
-            "Return" => 90,
-            "Back" => 85,
-            "Tab" => 60,
-            "Capital" => 80,
-            "LeftCtrl" or "RightCtrl" => 70,
-            _ => 45 // Стандартная кнопка
+            "Space" => 220,
+            "LeftShift" => 90,
+            "RightShift" => 105,
+            "Return" => 80,
+            "Back" => 75,
+            "Tab" => 55,
+            "Capital" => 70,
+            "LeftCtrl" or "RightCtrl" => 60,
+            "LeftAlt" or "RightAlt" => 50,
+            "Escape" => 50,
+            _ => 40 // Standard key width
         };
     }
 
+    // [WHERE: AddKey method - styling]
     private void AddKey(string keyName, double x, double y, double width)
     {
-        // Мапим страшные имена в красивые для отображения
+        // Simplified labels
         string displayLabel = keyName switch
         {
             "Oem3" => "~",
-            "D1" => "1",
-            "D2" => "2",
-            "D3" => "3",
-            "D4" => "4",
-            "D5" => "5",
-            "D6" => "6",
-            "D7" => "7",
-            "D8" => "8",
-            "D9" => "9",
-            "D0" => "0",
-            "Space" => "SPACE",
+            "OemMinus" => "-",
+            "OemPlus" => "=",
+            "Back" => "BKSP",
+            "OemOpenBrackets" => "[",
+            "Oem6" => "]",
+            "Oem5" => "\\",
+            "Oem1" => ";",
+            "OemQuotes" => "'",
+            "Return" => "ENT",
+            "OemComma" => ",",
+            "OemPeriod" => ".",
+            "OemQuestion" => "/",
+            "Capital" => "CAPS",
             "LeftShift" => "SHIFT",
             "RightShift" => "SHIFT",
             "LeftCtrl" => "CTRL",
             "RightCtrl" => "CTRL",
-            "Return" => "ENTER",
-            _ => keyName.Replace("Oem", "").Replace("D", "")
+            "LeftAlt" => "ALT",
+            "RightAlt" => "ALT",
+            "Space" => "",
+            "LWin" or "RWin" => "WIN",
+            // Фикс для D: Убираем D только если это цифра (D1, D2...), иначе оставляем
+            _ => (keyName.Length > 1 && keyName.StartsWith("D") && char.IsDigit(keyName[1]))
+                 ? keyName.Substring(1)
+                 : keyName.Replace("Oem", "")
         };
 
         var border = new Border
         {
             Width = width,
-            Height = 45,
-            Background = new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)), // Полупрозрачный белый
-            CornerRadius = new CornerRadius(4),
-            BorderBrush = new SolidColorBrush(Color.FromArgb(100, 255, 255, 255)),
+            Height = 40, // Standard height
+            Background = new SolidColorBrush(Color.FromArgb(40, 10, 10, 10)), // Darker glass
+            CornerRadius = new CornerRadius(3),
+            BorderBrush = new SolidColorBrush(Color.FromArgb(60, 255, 255, 255)),
             BorderThickness = new Thickness(1),
             Child = new TextBlock
             {
                 Text = displayLabel,
                 Foreground = Brushes.White,
-                FontSize = 10,
+                FontSize = 9,
+                FontWeight = FontWeights.Bold,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             }
@@ -113,7 +124,6 @@ public class KeyboardView : Canvas
         Children.Add(border);
         _keys[keyName.ToUpper()] = border;
     }
-
 
     public void PressKey(string key)
     {

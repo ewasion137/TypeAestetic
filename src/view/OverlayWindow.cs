@@ -15,13 +15,13 @@ public class OverlayWindow : Window
         Topmost = true;
         ShowInTaskbar = false;
 
-        // Window size for a full keyboard (approx 800x320)
         Width = 820;
-        Height = 320;
+        Height = 300; // Slightly reduced height
 
-        // Position: Bottom Right with 20px margin
-        Left = SystemParameters.PrimaryScreenWidth - Width - 20;
-        Top = SystemParameters.PrimaryScreenHeight - Height - 20;
+        // Use WorkArea to avoid Taskbar overlap
+        var workArea = SystemParameters.WorkArea;
+        Left = workArea.Right - Width - 10;
+        Top = workArea.Bottom - Height - 10;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
