@@ -2,15 +2,16 @@ using System;
 using System.Windows;
 using TypeAestetic.View;
 
-namespace TypeAestetic.Main;
-
-public static class Program
+namespace TypeAestetic.Main
 {
-    [STAThread]
-    public static void Main()
+    public class Program
     {
-        var app = new Application();
-        var window = new OverlayWindow();
-        app.Run(window);
+        [STAThread]
+        public static void Main()
+        {
+            var app = new Application();
+            var window = new OverlayWindow();
+            app.Run(window);
+        }
     }
 }
