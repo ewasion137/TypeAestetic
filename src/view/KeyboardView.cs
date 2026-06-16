@@ -66,8 +66,8 @@ public class KeyboardView : Canvas
             border.Background.BeginAnimation(SolidColorBrush.ColorProperty, null);
             border.Background = new SolidColorBrush(Colors.Cyan);
         
-            // Add Glow effect
-            border.Effect = new DropShadowEffect { 
+            // Fix: Use Capital 'C' in Color
+            border.Effect = new DropShadowEffect {
                 color = Colors.Cyan, BlurRadius = 15, ShadowDepth = 0, Opacity = 0.8 
             };
         }
