@@ -7,4 +7,6 @@ run:
 	dotnet run --project src/TypeAestetic.csproj
 
 clean:
-	rm -rf build/ src/bin/ src/obj/
+	@if exist build rmdir /s /q build
+	@if exist src\bin rmdir /s /q src\bin
+	@if exist src\obj rmdir /s /q src\obj
