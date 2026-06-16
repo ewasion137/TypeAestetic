@@ -68,7 +68,7 @@ public class KeyboardView : Canvas
         
             // Fix: Use Capital 'C' in Color
             border.Effect = new DropShadowEffect {
-                color = Colors.Cyan, BlurRadius = 15, ShadowDepth = 0, Opacity = 0.8 
+                Color = Colors.Cyan, BlurRadius = 15, ShadowDepth = 0, Opacity = 0.8 
             };
         }
     }
