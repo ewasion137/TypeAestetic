@@ -40,15 +40,14 @@ public class KeyboardHook : IDisposable
         if (nCode >= 0)
         {
             int vkCode = Marshal.ReadInt32(lParam);
-            char character = MapVkCodeToChar(vkCode);
 
-            if (character != '\0')
-            {
-                if (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)
-                    KeyPressed?.Invoke(character);
-                else if (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP)
-                    KeyReleased?.Invoke(character);
-            }
+            System.Windows.Input.Key key = System.Windows.Input.KeyInterop.KeyFromVirtualKey(vkCode);
+            string keyName = key.ToString().ToUpper();
+
+            if (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)
+                KeyPressed?.Invoke(keyName);
+            else if (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP)
+                KeyReleased?.Invoke(keyName);
         }
         return CallNextHookEx(_hookId, nCode, wParam, lParam);
     }
