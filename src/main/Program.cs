@@ -13,18 +13,28 @@ public static class Program
         var app = new Application();
         var window = new OverlayWindow();
         var view = new KeyboardView();
-        
+
         window.Content = view;
 
         using var hook = new KeyboardHook();
-        hook.KeyPressed += (key) => 
-        {  
-            window.Dispatcher.Invoke(() => view.PressKey(key.ToString()));
+        var soundManager = new SoundManager("bloody_red");
+
+        hook.KeyPressed += (keyName) =>
+        {
+            window.Dispatcher.Invoke(() =>
+            {
+                view.PressKey(keyName);
+                soundManager.Play(keyName, true); // Play Click
+            });
         };
 
-        hook.KeyReleased += (key) => 
-        {     
-            window.Dispatcher.Invoke(() => view.ReleaseKey(key.ToString()));
+        hook.KeyReleased += (keyName) =>
+        {
+            window.Dispatcher.Invoke(() =>
+            {
+                view.ReleaseKey(keyName);
+                soundManager.Play(keyName, false); // Play Release
+            });
         };
 
         hook.Install();

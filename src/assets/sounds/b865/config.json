@@ -1,0 +1,15 @@
+{
+  "name": "Bloody B865 Red",
+  "author": "ewasion",
+  "settings": {
+    "volume": 0.8,
+    "pitch_variation": 0.05
+  },
+  "maps": {
+    "SPACE": { "click": "space_click.wav", "release": "space_release.wav" },
+    "RETURN": { "click": "enter_click.wav", "release": "enter_release.wav" },
+    "SHIFT" : { "click": "shift_click.wav", "release": "shift_release.wav" },
+    "BACK": { "click": "backspace_click.wav", "release": "backspace_release.wav" },
+    "DEFAULT": { "click": "generic_click.wav", "release": "generic_release.wav" }
+  }
+}
