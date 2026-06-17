@@ -15,7 +15,7 @@ public class SoundManager
     public SoundManager(string packName)
     {
         // Path logic: looks into /assets/soundpacks/name/
-        _packPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "soundpacks", packName);
+        _packPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "sounds", packName);
         LoadConfig();
     }
 
