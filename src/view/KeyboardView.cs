@@ -144,7 +144,15 @@ public class KeyboardView : Canvas
                 BlurRadius = 15,
                 ShadowDepth = 0,
                 Opacity = 0.8
+
             };
+            var scaleTransform = new ScaleTransform(1.0, 1.0);
+            border.RenderTransform = scaleTransform;
+            border.RenderTransformOrigin = new Point(0.5, 0.5);
+
+            var scaleAnim = new DoubleAnimation(0.95, TimeSpan.FromMilliseconds(50));
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
         }
     }
 
