@@ -14,6 +14,7 @@ public class KeyboardHook : IDisposable
 
     private readonly LowLevelKeyboardProc _proc;
     private IntPtr _hookId = IntPtr.Zero;
+    private bool _disposed;
 
     public event Action<string>? KeyPressed;
     public event Action<string>? KeyReleased;
@@ -52,25 +53,18 @@ public class KeyboardHook : IDisposable
         return CallNextHookEx(_hookId, nCode, wParam, lParam);
     }
 
-    private char MapVkCodeToChar(int vkCode)
-    {
-        return vkCode switch
-        {
-            >= 65 and <= 90 => (char)vkCode,     // A-Z
-            >= 48 and <= 57 => (char)vkCode,     // 0-9
-            32 => ' ',                           // Space -> will be "SPACE" in Dictionary
-            160 or 161 => 'S',                   // Shift (L/R) -> map to 'S' or handle as "SHIFT"
-            162 or 163 => 'C',                   // Ctrl
-            _ => '\0'
-        };
-    }
-
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+
         if (_hookId != IntPtr.Zero)
         {
             UnhookWindowsHookEx(_hookId);
+            _hookId = IntPtr.Zero;
         }
+
+        GC.SuppressFinalize(this);
     }
 
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
