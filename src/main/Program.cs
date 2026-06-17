@@ -14,26 +14,28 @@ public static class Program
         var window = new OverlayWindow();
         var view = new KeyboardView();
 
+        // Initialize SoundManager with your folder name
+        var sound = new SoundManager("b865");
+
         window.Content = view;
 
         using var hook = new KeyboardHook();
-        var soundManager = new SoundManager("bloody_red");
 
-        hook.KeyPressed += (keyName) =>
+        hook.KeyPressed += (key) =>
         {
             window.Dispatcher.Invoke(() =>
             {
-                view.PressKey(keyName);
-                soundManager.Play(keyName, true); // Play Click
+                view.PressKey(key);
+                sound.Play(key, true); // Key Down Sound
             });
         };
 
-        hook.KeyReleased += (keyName) =>
+        hook.KeyReleased += (key) =>
         {
             window.Dispatcher.Invoke(() =>
             {
-                view.ReleaseKey(keyName);
-                soundManager.Play(keyName, false); // Play Release
+                view.ReleaseKey(key);
+                sound.Play(key, false); // Key Up Sound
             });
         };
 

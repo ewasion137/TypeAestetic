@@ -1,56 +1,50 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using NAudio.Wave;
 
 namespace TypeAestetic.Main;
 
 public class SoundManager
 {
-    private readonly string _packPath;
-    private Dictionary<string, JsonElement>? _config;
-    private readonly Random _rng = new();
+    private readonly string _soundDir;
 
-    public SoundManager(string packName)
+    public SoundManager(string packFolder)
     {
-        _packPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "soundpacks", packName);
-        LoadConfig();
-    }
-
-    private void LoadConfig()
-    {
-        var json = File.ReadAllText(Path.Combine(_packPath, "config.json"));
-        var doc = JsonDocument.Parse(json);
-        _config = doc.RootElement.GetProperty("maps").EnumerateObject().ToDictionary(x => x.Name, x => x.Value);
+        // Path to your wav files
+        _soundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "sounds", packFolder);
     }
 
     public void Play(string key, bool isClick)
     {
-        string keyUpper = key.ToUpper();
-        if (_config == null) return;
+        // Simple logic: key_click.wav or key_release.wav
+        // Fallback to generic_click.wav if specific not found
+        string type = isClick ? "click" : "release";
+        string fileName = $"{key.ToLower()}_{type}.wav";
+        string fullPath = Path.Combine(_soundDir, fileName);
 
-        // Ищем в конфиге конкретную клавишу или DEFAULT
-        if (!_config.TryGetValue(keyUpper, out var keyMap))
-            keyMap = _config["DEFAULT"];
-
-        string fileName = keyMap.GetProperty(isClick ? "click" : "release").GetString()!;
-        string fullPath = Path.Combine(_packPath, fileName);
+        if (!File.Exists(fullPath))
+        {
+            fullPath = Path.Combine(_soundDir, $"generic_{type}.wav");
+        }
 
         if (File.Exists(fullPath))
         {
-            // Проигрывание через NAudio (Fire and forget)
-            var reader = new AudioFileReader(fullPath);
-            var output = new WaveOutEvent();
-            output.Init(reader);
-            output.Play();
-
-            // Чистим память после завершения
-            output.PlaybackStopped += (s, e) =>
-            {
-                output.Dispose();
-                reader.Dispose();
-            };
+            PlayFile(fullPath);
         }
+    }
+
+    private void PlayFile(string path)
+    {
+        // Fire and forget audio playback
+        var reader = new AudioFileReader(path);
+        var output = new WaveOutEvent();
+        output.Init(reader);
+        output.Play();
+
+        // Cleanup when done
+        output.PlaybackStopped += (s, e) => {
+            output.Dispose();
+            reader.Dispose();
+        };
     }
 }

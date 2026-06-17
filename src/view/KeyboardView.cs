@@ -94,7 +94,7 @@ public class KeyboardView : Canvas
             "RightAlt" => "ALT",
             "Space" => "",
             "LWin" or "RWin" => "WIN",
-            // Fix for D
+            // Only strip 'D' if it's a number key (D1, D2...), keep it for 'D' key
             _ => (keyName.Length > 1 && keyName.StartsWith("D") && char.IsDigit(keyName[1]))
                  ? keyName.Substring(1)
                  : keyName.Replace("Oem", "")
