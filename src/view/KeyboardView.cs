@@ -31,11 +31,10 @@ public class KeyboardView : Canvas
 
     public KeyboardView()
     {
-        Width = 700;
-        Height = 330;
+        Width = 730;
+        Height = 320;
         ClipToBounds = false;
 
-        // Create the layered structure
         BuildUI();
         StartBreathingAnimation();
     }
@@ -49,46 +48,44 @@ public class KeyboardView : Canvas
 
     private void BuildUI()
     {
-        // === Background glow (ambient light behind the keyboard) ===
+        // Внешнее неоновое свечение шасси
         var ambientGlow = new Border
         {
-            Width = 680,
+            Width = 718,
             Height = 300,
-            CornerRadius = new CornerRadius(16),
+            CornerRadius = new CornerRadius(14),
             Background = new RadialGradientBrush
             {
-                GradientOrigin = new Point(0.5, 0.5),
                 Center = new Point(0.5, 0.5),
                 RadiusX = 0.7,
-                RadiusY = 0.8,
+                RadiusY = 0.7,
                 GradientStops = new GradientStopCollection
                 {
-                    new GradientStop(Color.FromArgb(15, 0, 229, 255), 0),
-                    new GradientStop(Color.FromArgb(5, 0, 229, 255), 0.6),
+                    new GradientStop(Color.FromArgb(30, 0, 229, 255), 0),
+                    new GradientStop(Color.FromArgb(8, 0, 229, 255), 0.6),
                     new GradientStop(Color.FromArgb(0, 0, 0, 0), 1)
                 }
             },
-            Opacity = 0.8
+            Opacity = 0.9
         };
-        Canvas.SetLeft(ambientGlow, 10);
-        Canvas.SetTop(ambientGlow, 22);
+        Canvas.SetLeft(ambientGlow, 6);
+        Canvas.SetTop(ambientGlow, 6);
         Children.Add(ambientGlow);
 
-        // === Frosted glass container ===
-        var container = new Border
+        // Монолитное обсидиановое шасси (непрозрачное!)
+        var chassis = new Border
         {
-            Width = 670,
+            Width = 710,
             Height = 295,
-            CornerRadius = new CornerRadius(14),
+            CornerRadius = new CornerRadius(12),
             Background = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
-                EndPoint = new Point(1, 1),
+                EndPoint = new Point(0, 1),
                 GradientStops = new GradientStopCollection
                 {
-                    new GradientStop(Color.FromArgb(35, 255, 255, 255), 0),
-                    new GradientStop(Color.FromArgb(15, 255, 255, 255), 0.5),
-                    new GradientStop(Color.FromArgb(25, 255, 255, 255), 1)
+                    new GradientStop(Color.FromRgb(18, 20, 30), 0),
+                    new GradientStop(Color.FromRgb(12, 13, 20), 1)
                 }
             },
             BorderBrush = new LinearGradientBrush
@@ -97,40 +94,42 @@ public class KeyboardView : Canvas
                 EndPoint = new Point(1, 1),
                 GradientStops = new GradientStopCollection
                 {
-                    new GradientStop(Color.FromArgb(80, 255, 255, 255), 0),
-                    new GradientStop(Color.FromArgb(20, 255, 255, 255), 0.5),
-                    new GradientStop(Color.FromArgb(60, 255, 255, 255), 1)
+                    new GradientStop(Color.FromArgb(120, 0, 229, 255), 0),
+                    new GradientStop(Color.FromArgb(40, 255, 255, 255), 0.5),
+                    new GradientStop(Color.FromArgb(20, 0, 229, 255), 1)
                 }
             },
-            BorderThickness = new Thickness(1),
-            Effect = new BlurEffect { Radius = 0.5 } // Subtle glass blur
+            BorderThickness = new Thickness(1.2),
+            Effect = new DropShadowEffect
+            {
+                BlurRadius = 25,
+                ShadowDepth = 6,
+                Opacity = 0.8,
+                Color = Colors.Black
+            }
         };
-        Canvas.SetLeft(container, 15);
-        Canvas.SetTop(container, 25);
-        Children.Add(container);
+        Canvas.SetLeft(chassis, 10);
+        Canvas.SetTop(chassis, 10);
+        Children.Add(chassis);
 
-        // === Stats overlay (positioned above the keyboard) ===
-        _stats = new StatsOverlay
-        {
-            Width = 660
-        };
-        Canvas.SetLeft(_stats, 20);
-        Canvas.SetTop(_stats, 0);
+        // OLED дашборд
+        _stats = new StatsOverlay { Width = 686 };
+        Canvas.SetLeft(_stats, 22);
+        Canvas.SetTop(_stats, 18);
         Children.Add(_stats);
 
-        // === Keyboard keys ===
+        // Клавиатурный блок
         CreateLayout();
 
-        // === Particle canvas (on top of everything) ===
+        // Слой эффектов
         var particleCanvas = new Canvas
         {
-            Width = 700,
-            Height = 330,
+            Width = 730,
+            Height = 320,
             ClipToBounds = false
         };
         Children.Add(particleCanvas);
-        _particles = new ParticleEffect(particleCanvas);
-        _particles.AccentColor = _accentColor;
+        _particles = new ParticleEffect(particleCanvas) { AccentColor = _accentColor };
     }
 
     private void CreateLayout()
@@ -145,23 +144,45 @@ public class KeyboardView : Canvas
         };
 
         double baseX = 22;
-        double baseY = 44; // After stats bar
-        double keyHeight = 34;
-        double gap = 3;
-        double rowGap = 3;
+        double baseY = 62;
+        double gap = 4;
+        double rowGap = 4;
 
-        double startY = baseY;
-        foreach (var row in rows)
+        double currentY = baseY;
+
+        for (int r = 0; r < rows.Length; r++)
         {
-            double startX = baseX;
+            var row = rows[r];
+            double currentX = baseX;
+            double keyHeight = (r == 0) ? 28 : 34;
 
-            foreach (var key in row)
+            if (r == 0)
             {
-                double width = GetKeyWidth(key);
-                AddKey(key, startX, startY, width, keyHeight);
-                startX += width + gap;
+                // Идеальное 75% распределение кластеров F-ряда
+                for (int i = 0; i < row.Length; i++)
+                {
+                    var key = row[i];
+                    double w = (key == "Escape") ? 44 : 42;
+                    AddKey(key, currentX, currentY, w, keyHeight);
+                    currentX += w;
+
+                    if (key == "Escape" || key == "F4" || key == "F8")
+                        currentX += 34; // кластерные зазоры
+                    else if (i < row.Length - 1)
+                        currentX += gap;
+                }
             }
-            startY += keyHeight + rowGap;
+            else
+            {
+                foreach (var key in row)
+                {
+                    double width = GetKeyWidth(key);
+                    AddKey(key, currentX, currentY, width, keyHeight);
+                    currentX += width + gap;
+                }
+            }
+
+            currentY += keyHeight + rowGap;
         }
     }
 
@@ -169,19 +190,16 @@ public class KeyboardView : Canvas
     {
         return key switch
         {
-            "Space" => 178,
-            "LeftShift" => 72,
-            "RightShift" => 86,
-            "Return" => 66,
-            "Back" => 62,
-            "Tab" => 46,
-            "Capital" => 58,
-            "LeftCtrl" or "RightCtrl" => 50,
-            "LeftAlt" or "RightAlt" => 42,
-            "Escape" => 42,
-            "LWin" or "RWin" => 42,
-            "Apps" => 42,
-            _ => 42 // Standard key width
+            "Back" => 88,
+            "Tab" => 65,
+            "Oem5" => 65,
+            "Capital" => 76,
+            "Return" => 100,
+            "LeftShift" => 99,
+            "RightShift" => 123,
+            "LeftCtrl" or "LWin" or "LeftAlt" or "RightAlt" or "RWin" or "Apps" or "RightCtrl" => 53,
+            "Space" => 287,
+            _ => 42
         };
     }
 
@@ -191,7 +209,7 @@ public class KeyboardView : Canvas
         {
             "Oem3" => "~",
             "OemMinus" => "-",
-            "OemPlus" => "=",
+            "OemPlus" => "+",
             "Back" => "⌫",
             "OemOpenBrackets" => "[",
             "Oem6" => "]",
@@ -216,18 +234,65 @@ public class KeyboardView : Canvas
                  : keyName
         };
 
-        // Key background — layered glass effect
+        bool isMod = keyName is "LeftCtrl" or "RightCtrl" or "LeftAlt" or "RightAlt" or "LWin" or "RWin"
+                     or "Apps" or "Capital" or "LeftShift" or "RightShift" or "Return" or "Tab" or "Back" or "Escape";
+
+        // Тактильный кейкап с 2.5D градиентом
         var keyBg = new LinearGradientBrush
         {
-            StartPoint = new Point(0.5, 0),
-            EndPoint = new Point(0.5, 1),
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
             GradientStops = new GradientStopCollection
             {
-                new GradientStop(Color.FromArgb(45, 255, 255, 255), 0),
-                new GradientStop(Color.FromArgb(18, 255, 255, 255), 0.4),
-                new GradientStop(Color.FromArgb(12, 255, 255, 255), 1)
+                new GradientStop(isMod ? Color.FromRgb(25, 27, 38) : Color.FromRgb(32, 35, 48), 0),
+                new GradientStop(isMod ? Color.FromRgb(16, 17, 24) : Color.FromRgb(21, 23, 32), 1)
             }
         };
+
+        var borderBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops = new GradientStopCollection
+            {
+                new GradientStop(Color.FromArgb(70, 255, 255, 255), 0), // свет сверху
+                new GradientStop(Color.FromArgb(20, 255, 255, 255), 0.5),
+                new GradientStop(Color.FromArgb(80, 0, 0, 0), 1)        // фаска снизу
+            }
+        };
+
+        UIElement keyContent;
+        if (keyName == "Space")
+        {
+            keyContent = new Border
+            {
+                Width = 56,
+                Height = 3,
+                CornerRadius = new CornerRadius(1.5),
+                Background = new SolidColorBrush(Color.FromArgb(90, 0, 229, 255)),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+        }
+        else
+        {
+            keyContent = new TextBlock
+            {
+                Text = displayLabel,
+                Foreground = isMod
+                    ? new SolidColorBrush(Color.FromArgb(170, 160, 175, 195))
+                    : new SolidColorBrush(Color.FromRgb(235, 240, 250)),
+                FontSize = displayLabel.Length > 3 ? 8 : 10,
+                FontWeight = FontWeights.SemiBold,
+                FontFamily = new FontFamily("Segoe UI, Consolas"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+        }
+
+        var tg = new TransformGroup();
+        tg.Children.Add(new ScaleTransform(1.0, 1.0));
+        tg.Children.Add(new TranslateTransform(0, 0));
 
         var border = new Border
         {
@@ -235,21 +300,19 @@ public class KeyboardView : Canvas
             Height = height,
             Background = keyBg,
             CornerRadius = new CornerRadius(5),
-            BorderBrush = new SolidColorBrush(Color.FromArgb(50, 255, 255, 255)),
-            BorderThickness = new Thickness(0.8),
-            Child = new TextBlock
+            BorderBrush = borderBrush,
+            BorderThickness = new Thickness(1, 1, 1, 1.5),
+            Child = keyContent,
+            Effect = new DropShadowEffect
             {
-                Text = displayLabel,
-                Foreground = new SolidColorBrush(Color.FromArgb(210, 255, 255, 255)),
-                FontSize = displayLabel.Length > 3 ? 7.5 : 9.5,
-                FontWeight = FontWeights.Medium,
-                FontFamily = new FontFamily("Segoe UI"),
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = System.Windows.VerticalAlignment.Center
+                BlurRadius = 3,
+                ShadowDepth = 1.5,
+                Direction = 270,
+                Opacity = 0.5,
+                Color = Colors.Black
             },
-
             RenderTransformOrigin = new Point(0.5, 0.5),
-            RenderTransform = new ScaleTransform(1.0, 1.0)
+            RenderTransform = tg
         };
 
         Canvas.SetLeft(border, x);
@@ -267,73 +330,56 @@ public class KeyboardView : Canvas
         if (_pressedKeys.Contains(key)) return;
         _pressedKeys.Add(key);
 
-        // Record stat
         _stats?.RecordKeystroke();
 
         if (_keys.TryGetValue(key, out var border))
         {
-            // Cancel any running release animation
             border.BeginAnimation(Border.OpacityProperty, null);
-            if (border.Background is SolidColorBrush)
-                border.Background.BeginAnimation(SolidColorBrush.ColorProperty, null);
 
-            // === Accent gradient glow ===
-            var accentBrush = new RadialGradientBrush
+            // Неоновая подсветка
+            border.Background = new RadialGradientBrush
             {
-                GradientOrigin = new Point(0.5, 0.5),
-                Center = new Point(0.5, 0.5),
-                RadiusX = 0.8,
-                RadiusY = 0.8,
+                Center = new Point(0.5, 0.4),
+                RadiusX = 0.9,
+                RadiusY = 0.9,
                 GradientStops = new GradientStopCollection
                 {
-                    new GradientStop(Color.FromArgb(200, _accentColor.R, _accentColor.G, _accentColor.B), 0),
-                    new GradientStop(Color.FromArgb(120, _accentColor.R, _accentColor.G, _accentColor.B), 0.6),
+                    new GradientStop(Color.FromArgb(230, _accentColor.R, _accentColor.G, _accentColor.B), 0),
+                    new GradientStop(Color.FromArgb(130, _accentColor.R, _accentColor.G, _accentColor.B), 0.6),
                     new GradientStop(Color.FromArgb(40, _accentColor.R, _accentColor.G, _accentColor.B), 1)
                 }
             };
-            border.Background = accentBrush;
 
-            // === Glow effect ===
+            border.BorderBrush = new SolidColorBrush(Color.FromArgb(230, 255, 255, 255));
             border.Effect = new DropShadowEffect
             {
                 Color = _accentColor,
-                BlurRadius = 20,
+                BlurRadius = 18,
                 ShadowDepth = 0,
-                Opacity = 0.9
+                Opacity = 0.95
             };
 
-            // === Border highlight ===
-            border.BorderBrush = new SolidColorBrush(Color.FromArgb(180, _accentColor.R, _accentColor.G, _accentColor.B));
-
-            // === Spring-like scale animation (down → bounce → settle) ===
-            var scale = border.RenderTransform as ScaleTransform ?? new ScaleTransform(1.0, 1.0);
-            border.RenderTransform = scale;
-
-            var pressDown = new DoubleAnimationUsingKeyFrames
+            // Тактильный щелчок вниз
+            if (border.RenderTransform is TransformGroup tg &&
+                tg.Children[0] is ScaleTransform scale &&
+                tg.Children[1] is TranslateTransform trans)
             {
-                Duration = TimeSpan.FromMilliseconds(200)
-            };
-            pressDown.KeyFrames.Add(new EasingDoubleKeyFrame(0.92, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(40)),
-                new CubicEase { EasingMode = EasingMode.EaseOut }));
-            pressDown.KeyFrames.Add(new EasingDoubleKeyFrame(1.03, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(120)),
-                new CubicEase { EasingMode = EasingMode.EaseOut }));
-            pressDown.KeyFrames.Add(new EasingDoubleKeyFrame(1.0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200)),
-                new CubicEase { EasingMode = EasingMode.EaseInOut }));
+                var down = new DoubleAnimation(0.96, TimeSpan.FromMilliseconds(50))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+                scale.BeginAnimation(ScaleTransform.ScaleXProperty, down);
+                scale.BeginAnimation(ScaleTransform.ScaleYProperty, down);
 
-            scale.BeginAnimation(ScaleTransform.ScaleXProperty, pressDown);
-            scale.BeginAnimation(ScaleTransform.ScaleYProperty, pressDown.Clone());
+                var move = new DoubleAnimation(1.5, TimeSpan.FromMilliseconds(50));
+                trans.BeginAnimation(TranslateTransform.YProperty, move);
+            }
 
-            // === Text brighten ===
             if (border.Child is TextBlock tb)
-            {
-                tb.Foreground = new SolidColorBrush(Colors.White);
-            }
+                tb.Foreground = Brushes.White;
 
-            // === Particles ===
             if (_keyPositions.TryGetValue(key, out var pos))
-            {
-                _particles?.Emit(pos.X, pos.Y, 4);
-            }
+                _particles?.Emit(pos.X, pos.Y, 5);
         }
     }
 
@@ -344,57 +390,63 @@ public class KeyboardView : Canvas
 
         if (_keys.TryGetValue(key, out var border))
         {
-            // === Smooth fade back to glass ===
-            var glassBrush = new SolidColorBrush(Color.FromArgb(45, 255, 255, 255));
-            border.Background = glassBrush;
+            bool isMod = key is "LEFTCTRL" or "RIGHTCTRL" or "LEFTALT" or "RIGHTALT" or "LWIN" or "RWIN"
+                         or "APPS" or "CAPITAL" or "LEFTSHIFT" or "RIGHTSHIFT" or "RETURN" or "TAB" or "BACK" or "ESCAPE";
 
-            var fadeColor = new ColorAnimation
+            var defaultBg = new LinearGradientBrush
             {
-                To = Color.FromArgb(25, 255, 255, 255),
-                Duration = TimeSpan.FromMilliseconds(400),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-            };
-            glassBrush.BeginAnimation(SolidColorBrush.ColorProperty, fadeColor);
-
-            // === Fade out glow ===
-            if (border.Effect is DropShadowEffect glow)
-            {
-                var fadeGlow = new DoubleAnimation
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(0, 1),
+                GradientStops = new GradientStopCollection
                 {
-                    To = 0,
-                    Duration = TimeSpan.FromMilliseconds(350),
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                };
-                fadeGlow.Completed += (_, _) => border.Effect = null;
-                glow.BeginAnimation(DropShadowEffect.OpacityProperty, fadeGlow);
-            }
-
-            // === Restore border ===
-            border.BorderBrush = new SolidColorBrush(Color.FromArgb(50, 255, 255, 255));
-
-            // === Text dim back ===
-            if (border.Child is TextBlock tb)
-            {
-                tb.Foreground = new SolidColorBrush(Color.FromArgb(210, 255, 255, 255));
-            }
-
-            // === Scale bounce back ===
-            var scale = border.RenderTransform as ScaleTransform ?? new ScaleTransform(1.0, 1.0);
-            border.RenderTransform = scale;
-
-            var releaseAnim = new DoubleAnimation
-            {
-                To = 1.0,
-                Duration = TimeSpan.FromMilliseconds(250),
-                EasingFunction = new ElasticEase
-                {
-                    EasingMode = EasingMode.EaseOut,
-                    Oscillations = 1,
-                    Springiness = 8
+                    new GradientStop(isMod ? Color.FromRgb(25, 27, 38) : Color.FromRgb(32, 35, 48), 0),
+                    new GradientStop(isMod ? Color.FromRgb(16, 17, 24) : Color.FromRgb(21, 23, 32), 1)
                 }
             };
-            scale.BeginAnimation(ScaleTransform.ScaleXProperty, releaseAnim);
-            scale.BeginAnimation(ScaleTransform.ScaleYProperty, releaseAnim.Clone());
+            border.Background = defaultBg;
+
+            border.BorderBrush = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(0, 1),
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Color.FromArgb(70, 255, 255, 255), 0),
+                    new GradientStop(Color.FromArgb(20, 255, 255, 255), 0.5),
+                    new GradientStop(Color.FromArgb(80, 0, 0, 0), 1)
+                }
+            };
+
+            border.Effect = new DropShadowEffect
+            {
+                BlurRadius = 3,
+                ShadowDepth = 1.5,
+                Direction = 270,
+                Opacity = 0.5,
+                Color = Colors.Black
+            };
+
+            if (border.RenderTransform is TransformGroup tg &&
+                tg.Children[0] is ScaleTransform scale &&
+                tg.Children[1] is TranslateTransform trans)
+            {
+                var up = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(180))
+                {
+                    EasingFunction = new ElasticEase { EasingMode = EasingMode.EaseOut, Oscillations = 1, Springiness = 7 }
+                };
+                scale.BeginAnimation(ScaleTransform.ScaleXProperty, up);
+                scale.BeginAnimation(ScaleTransform.ScaleYProperty, up);
+
+                var moveBack = new DoubleAnimation(0.0, TimeSpan.FromMilliseconds(120));
+                trans.BeginAnimation(TranslateTransform.YProperty, moveBack);
+            }
+
+            if (border.Child is TextBlock tb)
+            {
+                tb.Foreground = isMod
+                    ? new SolidColorBrush(Color.FromArgb(170, 160, 175, 195))
+                    : new SolidColorBrush(Color.FromRgb(235, 240, 250));
+            }
         }
     }
 

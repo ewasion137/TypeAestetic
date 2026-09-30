@@ -16,16 +16,14 @@ public class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly AppSettings _settings;
-    private readonly SoundManager _soundManager;
     private readonly System.Windows.Application _app;
     private SettingsWindow? _settingsWindow;
 
     public event Action? ToggleOverlayRequested;
 
-    public TrayIcon(AppSettings settings, SoundManager soundManager, System.Windows.Application app)
+    public TrayIcon(AppSettings settings, System.Windows.Application app)
     {
         _settings = settings;
-        _soundManager = soundManager;
         _app = app;
 
         _icon = new NotifyIcon
@@ -60,26 +58,6 @@ public class TrayIcon : IDisposable
 
         menu.Items.Add(new ToolStripSeparator());
 
-        // Sound packs submenu
-        var packsMenu = new ToolStripMenuItem("Sound Pack");
-        RefreshPacksList(packsMenu);
-        menu.Items.Add(packsMenu);
-
-        // Toggle sound
-        var soundToggle = new ToolStripMenuItem("Sound Enabled")
-        {
-            Checked = _settings.SoundEnabled,
-            CheckOnClick = true
-        };
-        soundToggle.CheckedChanged += (_, _) =>
-        {
-            _settings.SoundEnabled = soundToggle.Checked;
-            _soundManager.Enabled = soundToggle.Checked;
-        };
-        menu.Items.Add(soundToggle);
-
-        menu.Items.Add(new ToolStripSeparator());
-
         // Settings
         var settingsItem = new ToolStripMenuItem("Settings...");
         settingsItem.Click += (_, _) => OpenSettings();
@@ -99,41 +77,13 @@ public class TrayIcon : IDisposable
         _icon.ContextMenuStrip = menu;
     }
 
-    private void RefreshPacksList(ToolStripMenuItem parent)
-    {
-        parent.DropDownItems.Clear();
-        var packs = AppSettings.DiscoverSoundPacks();
-
-        foreach (var pack in packs)
-        {
-            var item = new ToolStripMenuItem(pack)
-            {
-                Checked = (pack == _settings.SoundPack)
-            };
-            item.Click += (_, _) =>
-            {
-                _settings.SoundPack = pack;
-                _soundManager.SwitchPack(pack);
-                // Update check marks
-                foreach (ToolStripMenuItem child in parent.DropDownItems)
-                    child.Checked = (child.Text == pack);
-            };
-            parent.DropDownItems.Add(item);
-        }
-
-        if (packs.Length == 0)
-        {
-            parent.DropDownItems.Add(new ToolStripMenuItem("(no packs found)") { Enabled = false });
-        }
-    }
-
     private void OpenSettings()
     {
         _app.Dispatcher.Invoke(() =>
         {
             if (_settingsWindow == null || !_settingsWindow.IsLoaded)
             {
-                _settingsWindow = new SettingsWindow(_settings, _soundManager);
+                _settingsWindow = new SettingsWindow(_settings);
                 _settingsWindow.Show();
             }
             else

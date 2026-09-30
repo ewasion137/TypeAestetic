@@ -5,125 +5,67 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Color = System.Windows.Media.Color;
+using Point = System.Windows.Point;
 
 namespace TypeAestetic.View;
 
-using Point = System.Windows.Point;
-using Color = System.Windows.Media.Color;
-
 /// <summary>
-/// Lightweight particle effect system for key press sparkles.
-/// Renders on a Canvas overlay — particles auto-remove after animation.
+/// Неоновые искры при ударах по клавишам.
 /// </summary>
 public class ParticleEffect
 {
     private readonly Canvas _canvas;
     private readonly Random _rng = new();
-    private bool _enabled = true;
+    public bool Enabled { get; set; } = true;
+    public Color AccentColor { get; set; } = Color.FromRgb(0, 229, 255);
 
-    public bool Enabled
+    public ParticleEffect(Canvas canvas) => _canvas = canvas;
+
+    public void Emit(double cx, double cy, int count = 6)
     {
-        get => _enabled;
-        set => _enabled = value;
-    }
-
-    public Color AccentColor { get; set; } = Colors.Cyan;
-
-    public ParticleEffect(Canvas canvas)
-    {
-        _canvas = canvas;
-    }
-
-    /// <summary>
-    /// Emit a burst of sparkle particles from the given screen position.
-    /// </summary>
-    public void Emit(double centerX, double centerY, int count = 5)
-    {
-        if (!_enabled) return;
-
+        if (!Enabled) return;
         for (int i = 0; i < count; i++)
-        {
-            SpawnParticle(centerX, centerY);
-        }
+            SpawnSpark(cx, cy);
     }
 
-    private void SpawnParticle(double cx, double cy)
+    private void SpawnSpark(double cx, double cy)
     {
-        double size = 2 + _rng.NextDouble() * 3; // 2–5px
+        double size = 2.5 + _rng.NextDouble() * 3.5;
         double angle = _rng.NextDouble() * Math.PI * 2;
-        double speed = 20 + _rng.NextDouble() * 40; // 20–60px travel
-        double duration = 300 + _rng.NextDouble() * 400; // 300–700ms
+        double speed = 25 + _rng.NextDouble() * 45;
+        double duration = 250 + _rng.NextDouble() * 250;
 
-        // Randomize color slightly around the accent
-        byte r = (byte)Math.Clamp(AccentColor.R + _rng.Next(-20, 20), 0, 255);
-        byte g = (byte)Math.Clamp(AccentColor.G + _rng.Next(-20, 20), 0, 255);
-        byte b = (byte)Math.Clamp(AccentColor.B + _rng.Next(-20, 20), 0, 255);
-        var color = Color.FromArgb(220, r, g, b);
-
-        var particle = new Ellipse
+        var spark = new Ellipse
         {
             Width = size,
             Height = size,
             Fill = new RadialGradientBrush(
-                Color.FromArgb(255, r, g, b),
-                Color.FromArgb(0, r, g, b))
+                Colors.White,
+                Color.FromArgb(0, AccentColor.R, AccentColor.G, AccentColor.B))
         };
 
-        Canvas.SetLeft(particle, cx - size / 2);
-        Canvas.SetTop(particle, cy - size / 2);
-        _canvas.Children.Add(particle);
-
-        // Animate position
-        double dx = Math.Cos(angle) * speed;
-        double dy = Math.Sin(angle) * speed - 15; // Slight upward bias
+        Canvas.SetLeft(spark, cx - size / 2);
+        Canvas.SetTop(spark, cy - size / 2);
+        _canvas.Children.Add(spark);
 
         var dur = TimeSpan.FromMilliseconds(duration);
         var ease = new QuadraticEase { EasingMode = EasingMode.EaseOut };
 
-        var moveX = new DoubleAnimation
-        {
-            By = dx,
-            Duration = dur,
-            EasingFunction = ease
-        };
+        var moveX = new DoubleAnimation { By = Math.Cos(angle) * speed, Duration = dur, EasingFunction = ease };
+        var moveY = new DoubleAnimation { By = Math.Sin(angle) * speed - 18, Duration = dur, EasingFunction = ease };
 
-        var moveY = new DoubleAnimation
-        {
-            By = dy,
-            Duration = dur,
-            EasingFunction = ease
-        };
-
-        // Fade out
-        var fadeOut = new DoubleAnimation
-        {
-            From = 1.0,
-            To = 0.0,
-            Duration = dur,
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
-        };
-
-        // Scale down
+        var fade = new DoubleAnimation { From = 1.0, To = 0.0, Duration = dur, EasingFunction = ease };
         var scale = new ScaleTransform(1.0, 1.0);
-        particle.RenderTransform = scale;
-        particle.RenderTransformOrigin = new Point(0.5, 0.5);
+        spark.RenderTransform = scale;
+        spark.RenderTransformOrigin = new Point(0.5, 0.5);
 
-        var shrink = new DoubleAnimation
-        {
-            To = 0.0,
-            Duration = dur,
-            EasingFunction = ease
-        };
+        var shrink = new DoubleAnimation { To = 0.1, Duration = dur };
 
-        // Remove particle when animation completes
-        fadeOut.Completed += (_, _) =>
-        {
-            _canvas.Children.Remove(particle);
-        };
+        fade.Completed += (_, _) => _canvas.Children.Remove(spark);
 
-        particle.BeginAnimation(Canvas.LeftProperty, moveX);
-        particle.BeginAnimation(Canvas.TopProperty, moveY);
-        particle.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+        spark.BeginAnimation(Canvas.LeftProperty, moveX);
+        spark.BeginAnimation(Canvas.TopProperty, moveY);
+        spark.BeginAnimation(UIElement.OpacityProperty, fade);
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, shrink);
         scale.BeginAnimation(ScaleTransform.ScaleYProperty, shrink);
     }

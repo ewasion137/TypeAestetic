@@ -18,27 +18,12 @@ public class AppSettings : INotifyPropertyChanged
     };
 
     // Backing fields
-    private float _volume = 0.8f;
-    private string _soundPack = "b865";
     private double _overlayOpacity = 0.92;
     private OverlayCorner _overlayCorner = OverlayCorner.BottomRight;
     private bool _particlesEnabled = true;
     private string _accentColor = "#00E5FF"; // Electric cyan
     private bool _statsEnabled = true;
-    private bool _soundEnabled = true;
     private bool _overlayVisible = true;
-
-    public float Volume
-    {
-        get => _volume;
-        set { if (_volume != value) { _volume = Math.Clamp(value, 0f, 1f); OnPropertyChanged(nameof(Volume)); Save(); } }
-    }
-
-    public string SoundPack
-    {
-        get => _soundPack;
-        set { if (_soundPack != value) { _soundPack = value; OnPropertyChanged(nameof(SoundPack)); Save(); } }
-    }
 
     public double OverlayOpacity
     {
@@ -68,12 +53,6 @@ public class AppSettings : INotifyPropertyChanged
     {
         get => _statsEnabled;
         set { if (_statsEnabled != value) { _statsEnabled = value; OnPropertyChanged(nameof(StatsEnabled)); Save(); } }
-    }
-
-    public bool SoundEnabled
-    {
-        get => _soundEnabled;
-        set { if (_soundEnabled != value) { _soundEnabled = value; OnPropertyChanged(nameof(SoundEnabled)); Save(); } }
     }
 
     [JsonIgnore]
@@ -118,21 +97,6 @@ public class AppSettings : INotifyPropertyChanged
             System.Diagnostics.Debug.WriteLine($"[Settings] Load failed: {ex.Message}");
         }
         return new AppSettings();
-    }
-
-    /// <summary>
-    /// Returns all available sound pack folder names from assets/sounds/
-    /// </summary>
-    public static string[] DiscoverSoundPacks()
-    {
-        var soundsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "sounds");
-        if (!Directory.Exists(soundsDir))
-            return Array.Empty<string>();
-
-        return Directory.GetDirectories(soundsDir)
-            .Select(Path.GetFileName)
-            .Where(name => name != null)
-            .ToArray()!;
     }
 }
 

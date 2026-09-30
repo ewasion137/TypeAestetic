@@ -1,7 +1,6 @@
 using System;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Runtime.InteropServices;
 using TypeAestetic.Main;
@@ -22,12 +21,11 @@ public class OverlayWindow : Window
         Topmost = true;
         ShowInTaskbar = false;
 
-        Width = 720;
-        Height = 355;
+        Width = 745;
+        Height = 340;
 
         PositionWindow();
 
-        // React to settings changes
         _settings.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(AppSettings.OverlayCorner))
@@ -42,7 +40,7 @@ public class OverlayWindow : Window
     private void PositionWindow()
     {
         var workArea = SystemParameters.WorkArea;
-        const double margin = 12;
+        const double margin = 16;
 
         switch (_settings.OverlayCorner)
         {
@@ -69,12 +67,10 @@ public class OverlayWindow : Window
     {
         base.OnSourceInitialized(e);
 
-        // Make click-through
         var hwnd = new WindowInteropHelper(this).Handle;
         uint exStyle = GetWindowLong(hwnd, -20);
         SetWindowLong(hwnd, -20, exStyle | 0x00000020 | 0x00080000);
 
-        // Slide-in animation
         PlaySlideIn();
     }
 
@@ -83,32 +79,25 @@ public class OverlayWindow : Window
         var workArea = SystemParameters.WorkArea;
         double targetTop = Top;
 
-        // Start below the screen
         if (_settings.OverlayCorner == OverlayCorner.BottomRight || _settings.OverlayCorner == OverlayCorner.BottomLeft)
-        {
-            Top = workArea.Bottom + 50;
-        }
+            Top = workArea.Bottom + 40;
         else
-        {
-            Top = workArea.Top - Height - 50;
-        }
+            Top = workArea.Top - Height - 40;
 
         Opacity = 0;
 
-        // Animate position
         var slideAnim = new DoubleAnimation
         {
             To = targetTop,
-            Duration = TimeSpan.FromMilliseconds(600),
+            Duration = TimeSpan.FromMilliseconds(500),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         BeginAnimation(TopProperty, slideAnim);
 
-        // Fade in
         var fadeIn = new DoubleAnimation
         {
             To = _settings.OverlayOpacity,
-            Duration = TimeSpan.FromMilliseconds(500),
+            Duration = TimeSpan.FromMilliseconds(450),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         BeginAnimation(OpacityProperty, fadeIn);
@@ -120,19 +109,9 @@ public class OverlayWindow : Window
         var fade = new DoubleAnimation
         {
             To = targetOpacity,
-            Duration = TimeSpan.FromMilliseconds(300),
+            Duration = TimeSpan.FromMilliseconds(250),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
         };
-
-        if (!visible)
-        {
-            fade.Completed += (_, _) =>
-            {
-                // Keep window technically visible but fully transparent
-                // so we still receive events
-            };
-        }
-
         BeginAnimation(OpacityProperty, fade);
     }
 

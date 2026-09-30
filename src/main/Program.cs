@@ -11,7 +11,7 @@ public static class Program
     public static void Main()
     {
         System.Windows.Application app = new System.Windows.Application();
-    app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         // Load settings
         var settings = AppSettings.Load();
@@ -19,11 +19,6 @@ public static class Program
         // Initialize components
         var window = new OverlayWindow(settings);
         var view = new KeyboardView();
-        var sound = new SoundManager(settings.SoundPack)
-        {
-            Volume = settings.Volume,
-            Enabled = settings.SoundEnabled
-        };
         using var hook = new KeyboardHook();
 
         // Configure view from settings
@@ -39,15 +34,6 @@ public static class Program
                     case nameof(AppSettings.ParticlesEnabled):
                         view.SetParticlesEnabled(settings.ParticlesEnabled);
                         break;
-                    case nameof(AppSettings.Volume):
-                        sound.Volume = settings.Volume;
-                        break;
-                    case nameof(AppSettings.SoundEnabled):
-                        sound.Enabled = settings.SoundEnabled;
-                        break;
-                    case nameof(AppSettings.SoundPack):
-                        sound.SwitchPack(settings.SoundPack);
-                        break;
                 }
             });
         };
@@ -55,7 +41,7 @@ public static class Program
         window.Content = view;
 
         // System tray icon
-        using var tray = new TrayIcon(settings, sound, app);
+        using var tray = new TrayIcon(settings, app);
         tray.ToggleOverlayRequested += () =>
         {
             window.Dispatcher.Invoke(() =>
@@ -70,7 +56,6 @@ public static class Program
             window.Dispatcher.Invoke(() =>
             {
                 view.PressKey(key);
-                sound.Play(key, true);
             });
         };
 
@@ -79,17 +64,15 @@ public static class Program
             window.Dispatcher.Invoke(() =>
             {
                 view.ReleaseKey(key);
-                sound.Play(key, false);
             });
         };
 
         hook.Install();
-
+ 
         // Clean shutdown
         app.Exit += (_, _) =>
         {
             hook.Dispose();
-            sound.Dispose();
             tray.Dispose();
         };
 

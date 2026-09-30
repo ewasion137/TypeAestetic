@@ -23,16 +23,14 @@ namespace TypeAestetic.View;
 public class SettingsWindow : Window
 {
     private readonly AppSettings _settings;
-    private readonly SoundManager _soundManager;
 
-    public SettingsWindow(AppSettings settings, SoundManager soundManager)
+    public SettingsWindow(AppSettings settings)
     {
         _settings = settings;
-        _soundManager = soundManager;
 
         Title = "TypeAestetic — Settings";
         Width = 420;
-        Height = 520;
+        Height = 440;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         ResizeMode = ResizeMode.NoResize;
         WindowStyle = WindowStyle.None;
@@ -85,24 +83,6 @@ public class SettingsWindow : Window
 
         mainStack.Children.Add(titleBar);
 
-        // === Volume ===
-        mainStack.Children.Add(CreateSection("Volume", () =>
-        {
-            var slider = CreateStyledSlider(0, 100, _settings.Volume * 100);
-            var label = CreateValueLabel($"{(int)(_settings.Volume * 100)}%");
-            slider.ValueChanged += (_, e) =>
-            {
-                _settings.Volume = (float)(e.NewValue / 100.0);
-                _soundManager.Volume = _settings.Volume;
-                label.Text = $"{(int)e.NewValue}%";
-            };
-            var panel = new DockPanel();
-            DockPanel.SetDock(label, Dock.Right);
-            panel.Children.Add(label);
-            panel.Children.Add(slider);
-            return panel;
-        }));
-
         // === Overlay Opacity ===
         mainStack.Children.Add(CreateSection("Overlay Opacity", () =>
         {
@@ -118,38 +98,6 @@ public class SettingsWindow : Window
             panel.Children.Add(label);
             panel.Children.Add(slider);
             return panel;
-        }));
-
-        // === Sound Pack ===
-        mainStack.Children.Add(CreateSection("Sound Pack", () =>
-        {
-            var combo = new ComboBox
-            {
-                Background = new SolidColorBrush(Color.FromRgb(35, 35, 42)),
-                Foreground = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromArgb(60, 255, 255, 255)),
-                FontSize = 13,
-                Padding = new Thickness(8, 6, 8, 6)
-            };
-
-            var packs = AppSettings.DiscoverSoundPacks();
-            foreach (var pack in packs)
-            {
-                combo.Items.Add(pack);
-                if (pack == _settings.SoundPack)
-                    combo.SelectedItem = pack;
-            }
-
-            combo.SelectionChanged += (_, _) =>
-            {
-                if (combo.SelectedItem is string pack)
-                {
-                    _settings.SoundPack = pack;
-                    _soundManager.SwitchPack(pack);
-                }
-            };
-
-            return combo;
         }));
 
         // === Overlay Corner ===
@@ -190,13 +138,6 @@ public class SettingsWindow : Window
 
         mainStack.Children.Add(CreateToggleSection("Typing Stats", _settings.StatsEnabled,
             isOn => _settings.StatsEnabled = isOn));
-
-        mainStack.Children.Add(CreateToggleSection("Sound", _settings.SoundEnabled,
-            isOn =>
-            {
-                _settings.SoundEnabled = isOn;
-                _soundManager.Enabled = isOn;
-            }));
 
         // Make window draggable from title area
         titleBar.MouseLeftButtonDown += (_, _) => DragMove();
